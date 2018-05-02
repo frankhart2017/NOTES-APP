@@ -64,6 +64,17 @@ app.post('/notes', authenticate, (req, res) => {
   })
 });
 
+//Getting all notes of a user
+app.get('/notes', authenticate, (req, res) => {
+  Note.find({
+    _creator: req.user._id
+  }).then((notes) => {
+    res.send({notes})
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
 });
