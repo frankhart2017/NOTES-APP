@@ -5,6 +5,7 @@ const {ObjectId} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose.js');
 var {User} = require('./models/user');
+var {Note} = require('./models/note')
 var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
@@ -46,6 +47,21 @@ app.delete('/users/me/token', authenticate, (req, res) => {
   }, () => {
     res.status(400).send();
   });
+});
+
+//Add a new note route
+app.post('/notes', authenticate, (req, res) => {
+  var note = new Note({
+    _creator: req.user._id,
+    title: req.body.title,
+    note: req.body.note
+  });
+
+  note.save().then((doc) => {
+    res.send(doc);
+  }, (e) => {
+    res.status(400).send(e);
+  })
 });
 
 app.listen(port, () => {
