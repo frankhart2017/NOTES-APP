@@ -64,7 +64,7 @@ app.post('/notes', authenticate, (req, res) => {
   })
 });
 
-//Getting all notes of a user
+//Getting all notes of a user route
 app.get('/notes', authenticate, (req, res) => {
   Note.find({
     _creator: req.user._id
@@ -72,6 +72,28 @@ app.get('/notes', authenticate, (req, res) => {
     res.send({notes})
   }, (e) => {
     res.status(400).send(e);
+  });
+});
+
+//Getting a particular note by id route
+app.get('/notes/:id', authenticate, (req, res) => {
+  var id = req.params.id;
+
+  if(!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Note.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((note) => {
+    if(!note) {
+      return res.status(404).send();
+    }
+
+    res.send({note});
+  }).catch((e) => {
+    res.status(400).send();
   });
 });
 
