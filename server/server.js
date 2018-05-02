@@ -97,6 +97,28 @@ app.get('/notes/:id', authenticate, (req, res) => {
   });
 });
 
+//Deleting a particular note by id route
+app.delete('/notes/:id', authenticate, (req, res) => {
+  var id = req.params.id;
+
+  if(!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Note.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  }).then((note) => {
+    if(!note) {
+      return res.status(404).send();
+    }
+
+    res.send(note);
+  }).catch((e) => {
+    res.send(400).send();
+  });
+});
+
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
 });
