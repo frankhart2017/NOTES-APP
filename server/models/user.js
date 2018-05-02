@@ -73,12 +73,29 @@ UserSchema.pre('save', function(next) {
   }
 });
 
+UserSchema.statics.findByToken = function(token) {
+  var User = this;
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch(e) {
+    return Promise.reject();
+  }
+
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
+};
+
 UserSchema.statics.findByCredentials = function(email, password) {
   var User = this;
 
   return User.findOne({email}).then((user) => {
     if(!user) {
-      return Promise.reject();
+      return Promise.reject("Account does not exist");
     }
 
     return new Promise((resolve, reject) => {
@@ -87,14 +104,29 @@ UserSchema.statics.findByCredentials = function(email, password) {
           if(res) {
             resolve(user);
           } else {
-            reject();
+            reject("Incorrect credentials");
           }
         });
       } else {
-        reject("Logged in already!");
+        reject("Logged in on another device!");
       }
     });
   });
+};
+
+UserSchema.methods.removeToken = function(token) {
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {
+        tokens: {token}
+      }
+    },
+    $set: {
+      __v: 0
+    }
+  })
 };
 
 var User = mongoose.model('User', UserSchema);
