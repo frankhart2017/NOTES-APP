@@ -1,4 +1,29 @@
 const express = require('express');
 const _ = require('lodash');
+const bodyParser = require('body-parser');
+const {ObjectId} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose.js');
+var {User} = require('./models/user');
+
+var app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['name', 'email', 'password']);
+  var user = new User(body);
+
+  user.save().then(() => {
+    return user.generateAuthToken();
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
+  }).catch((e) => {
+    res.status(400).send(e.message);
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Started on port ${port}`);
+});
