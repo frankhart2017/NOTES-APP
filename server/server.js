@@ -119,6 +119,33 @@ app.delete('/notes/:id', authenticate, (req, res) => {
   });
 });
 
+//Updating a particular note by id route
+app.patch('/notes/:id', authenticate, (req, res) => {
+  var id = req.params.id;
+  var body = _.pick(req.body, ['title', 'note']);
+
+  if(!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Note.findOneAndUpdate({
+    _id: id,
+    _creator: req.user._id
+  }, {
+    $set: body
+  }, {
+    new: true
+  }).then((note) => {
+    if(!note) {
+      return res.status(404).send();
+    }
+
+    res.send({note});
+  }).catch((e) => {
+    res.status(400).send();
+  })
+});
+
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
 });
